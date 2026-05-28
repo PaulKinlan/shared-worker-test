@@ -352,3 +352,28 @@ button.danger:active {
   text-underline-offset: 12px;
   font-size: 3.5rem;
 }
+
+.author-block {
+  margin-top: 24px;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--text-charcoal);
+  border-top: 1px solid var(--border-black);
+  border-bottom: 1px solid var(--border-black);
+  padding: 8px 16px;
+  display: inline-flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.author-block a {
+  color: var(--accent-blue);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.author-block a:hover {
+  color: var(--text-black);
+}

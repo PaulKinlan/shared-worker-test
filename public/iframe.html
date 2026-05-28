@@ -4,42 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SharedWorker Client Iframe</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <style>
     body {
       background: transparent !important;
-      padding: 10px;
+      padding: 8px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
     .iframe-card {
       flex: 1;
-      padding: 16px;
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 20px);
+      height: calc(100vh - 16px);
+      box-shadow: 3px 3px 0px #000000;
+    }
+    .iframe-card:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px #000000;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     .header h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--accent-cyan);
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-black);
+      border-bottom: 1px solid var(--border-black);
     }
     .terminal-window {
       flex: 1;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       min-height: 120px;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.06);
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
   </style>
 </head>
@@ -55,13 +63,13 @@
       <div class="terminal-line">
         <span class="time">[--:--:--]</span>
         <span class="sys-tag">[System]</span>
-        <span class="msg-text">Initializing SharedWorker interface...</span>
+        <span class="msg-text">Initializing SharedWorker...</span>
       </div>
     </div>
 
     <div class="controls">
       <form id="message-form" class="flex-row">
-        <input type="text" id="message-input" placeholder="Type a message to broadcast..." required autocomplete="off">
+        <input type="text" id="message-input" placeholder="Type a message..." required autocomplete="off">
         <button type="submit" class="primary">Send</button>
       </form>
       
@@ -72,7 +80,6 @@
   </div>
 
   <script>
-    // Extract Client Metadata from URL query parameters
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get('id') || `iframe-${Math.random().toString(36).substring(2, 9)}`;
     const clientName = params.get('name') || 'Iframe Node';
@@ -116,13 +123,12 @@
       line.appendChild(textSpan);
       terminalEl.appendChild(line);
 
-      // Keep scrolled to bottom
       terminalEl.scrollTop = terminalEl.scrollHeight;
     }
 
     function initSharedWorker() {
       if (typeof SharedWorker === 'undefined') {
-        logToTerminal('System', 'Error: SharedWorker is not supported in this browser.', true);
+        logToTerminal('System', 'Error: SharedWorker not supported.', true);
         statusBadge.className = 'badge badge-danger';
         statusBadge.textContent = 'Unsupported';
         toggleConnBtn.disabled = true;
@@ -130,21 +136,19 @@
       }
 
       try {
-        // Instantiate SharedWorker
-        myWorker = new SharedWorker('worker.js');
+        myWorker = new SharedWorker('worker.js?v=2');
         workerPort = myWorker.port;
 
-        // Register the message listener
         workerPort.onmessage = function(event) {
           const data = event.data;
           
           if (data.type === 'system') {
-            if (data.id === clientId) return; // Ignore self-notifications
+            if (data.id === clientId) return;
             
             if (data.action === 'connected') {
-              logToTerminal('System', `${data.name} has joined the worker node grid.`, true);
+              logToTerminal('System', `${data.name} joined.`, true);
             } else if (data.action === 'disconnected') {
-              logToTerminal('System', `${data.name} has left the worker node grid.`, true);
+              logToTerminal('System', `${data.name} left.`, true);
             }
           } 
           else if (data.type === 'message') {
@@ -152,10 +156,8 @@
           }
         };
 
-        // Explicitly start the connection
         workerPort.start();
 
-        // Register with details
         workerPort.postMessage({
           type: 'register',
           id: clientId,
@@ -168,7 +170,7 @@
         toggleConnBtn.textContent = 'Disconnect Node';
         toggleConnBtn.className = 'danger flex-grow';
         
-        logToTerminal('System', 'Connected successfully to SharedWorker.', true);
+        logToTerminal('System', 'Connected to SharedWorker.', true);
       } catch (err) {
         logToTerminal('System', `Connection failed: ${err.message}`, true);
         console.error(err);
@@ -177,7 +179,6 @@
 
     function disconnectFromWorker() {
       if (workerPort) {
-        // Gracefully notify worker of disconnect
         workerPort.postMessage({ type: 'disconnect' });
         workerPort.close();
       }
@@ -188,10 +189,9 @@
       toggleConnBtn.textContent = 'Reconnect Node';
       toggleConnBtn.className = 'primary flex-grow';
       
-      logToTerminal('System', 'Disconnected from SharedWorker manually.', true);
+      logToTerminal('System', 'Disconnected manually.', true);
     }
 
-    // Connect / Disconnect Action
     toggleConnBtn.addEventListener('click', () => {
       if (isConnected) {
         disconnectFromWorker();
@@ -200,7 +200,6 @@
       }
     });
 
-    // Form submission
     messageForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const text = messageInput.value.trim();
@@ -208,11 +207,10 @@
       if (!text) return;
       
       if (!isConnected) {
-        logToTerminal('System', 'Cannot send message: Node is offline. Please reconnect first.', true);
+        logToTerminal('System', 'Cannot send: Node is offline.', true);
         return;
       }
 
-      // Send message through worker port
       workerPort.postMessage({
         type: 'message',
         text: text
@@ -222,14 +220,12 @@
       messageInput.focus();
     });
 
-    // Graceful disconnect on unload
     window.addEventListener('beforeunload', () => {
       if (workerPort && isConnected) {
         workerPort.postMessage({ type: 'disconnect' });
       }
     });
 
-    // Run initialization
     initSharedWorker();
   </script>
 </body>

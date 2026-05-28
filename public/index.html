@@ -3,67 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌌 SharedWorker Multiplex Test Suite</title>
-  <link rel="stylesheet" href="style.css">
+  <title>AI Focus — SharedWorker Multiplex</title>
+  <link rel="stylesheet" href="style.css?v=2">
   <style>
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 50px 20px;
     }
     
     header {
       text-align: center;
-      margin-bottom: 40px;
-    }
-    
-    header h1 {
-      font-size: 2.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
+      margin-bottom: 60px;
     }
     
     header p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
+      color: var(--text-charcoal);
+      font-size: 1.15rem;
+      font-family: var(--font-serif);
+      font-style: italic;
+      margin-top: 24px;
     }
 
     .main-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 24px;
-      margin-bottom: 30px;
+      gap: 30px;
+      margin-bottom: 40px;
     }
 
     @media (min-width: 1024px) {
       .main-grid {
-        grid-template-columns: 450px 1fr;
+        grid-template-columns: 460px 1fr;
       }
     }
 
     /* Side Panels */
     .dashboard-panel {
-      padding: 24px;
+      padding: 30px 24px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 32px;
     }
 
     .panel-section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 8px;
-      color: var(--accent-cyan);
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-black);
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      color: var(--text-black);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* Iframes container styling */
+    /* Sandbox layout */
     .sandbox-container {
-      padding: 24px;
+      padding: 30px 24px;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -72,7 +70,7 @@
     .iframes-flex {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
     }
 
     @media (min-width: 768px) {
@@ -83,17 +81,18 @@
 
     .iframe-wrapper {
       flex: 1;
-      border: 1px solid var(--border-glow);
-      border-radius: 12px;
+      border: 2px solid var(--border-black);
+      border-radius: 4px;
       overflow: hidden;
-      background: rgba(10, 12, 22, 0.4);
-      height: 480px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      transition: var(--transition-smooth);
+      background: var(--bg-paper);
+      height: 500px;
+      box-shadow: var(--flat-shadow);
+      transition: var(--transition-fast);
     }
 
     .iframe-wrapper:hover {
-      border-color: var(--border-focus);
+      transform: translate(-2px, -2px);
+      box-shadow: var(--flat-shadow-hover);
     }
 
     .iframe-wrapper iframe {
@@ -104,21 +103,21 @@
 
     /* Diagnostics Log */
     .diagnostics-log {
-      height: 160px;
-      color: #93c5fd;
+      height: 180px;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.06);
     }
 
-    /* Multi-Tab visual helper */
+    /* Editorial callout */
     .tab-test-card {
-      padding: 24px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-      border: 1px solid rgba(168, 85, 247, 0.2);
+      padding: 30px 24px;
+      background: var(--bg-stone);
+      border: 2px solid var(--border-black);
     }
 
     .copy-section {
       display: flex;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 12px;
+      margin-top: 16px;
     }
   </style>
 </head>
@@ -126,8 +125,8 @@
 
   <div class="container">
     <header>
-      <h1 class="title-gradient">🌌 SharedWorker Multiplex</h1>
-      <p>A high-fidelity cross-context and cross-tab real-time communication platform</p>
+      <h1 class="title-gradient">AI Focus SharedWorker</h1>
+      <p>A textbook-grade real-time multiplexer for cross-iframe and cross-tab communication.</p>
     </header>
 
     <div class="main-grid">
@@ -141,11 +140,11 @@
             <span>Parent Main Client</span>
             <span id="main-status-badge" class="badge badge-success">Connected</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0 12px 0;">
-            The parent window is registered in the worker as a standard peer node.
+          <p style="font-size: 0.88rem; font-family: var(--font-serif); color: var(--text-charcoal); margin: 6px 0 14px 0;">
+            The parent window registers directly with the SharedWorker background thread as a primary peer node.
           </p>
           <form id="parent-message-form" class="flex-row">
-            <input type="text" id="parent-message-input" placeholder="Broadcasting from parent..." required autocomplete="off">
+            <input type="text" id="parent-message-input" placeholder="Type a message to broadcast..." required autocomplete="off">
             <button type="submit" class="primary">Broadcast</button>
           </form>
         </div>
@@ -153,7 +152,7 @@
         <!-- Topology Map -->
         <div>
           <div class="panel-section-title">
-            <span>Worker Topology Map</span>
+            <span>System Topology Map</span>
           </div>
           <div class="topology-container">
             <div class="topology-grid" id="topology-grid">
@@ -169,7 +168,7 @@
         <!-- Wire Trace Log -->
         <div>
           <div class="panel-section-title">
-            <span>SharedWorker Trace Log</span>
+            <span>SharedWorker Wire Trace</span>
           </div>
           <div id="diagnostics" class="terminal-window diagnostics-log">
             <div class="terminal-line">
@@ -186,18 +185,18 @@
       <div class="glass-panel sandbox-container">
         <div class="panel-section-title">
           <span>Embedded Client Sandboxes (Iframes)</span>
-          <span class="badge badge-success" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.3);">Iframe Sandbox Mode</span>
+          <span class="badge" style="background: var(--bg-stone); color: var(--text-black);">Iframe Mode</span>
         </div>
-        <p style="font-size: 0.9rem; color: var(--text-muted);">
-          These two iframes share the same window context and communicate entirely via the central SharedWorker background thread.
+        <p style="font-size: 0.95rem; font-family: var(--font-serif); color: var(--text-charcoal); line-height: 1.6;">
+          These two iframe nodes share the same browser window context and coordinate entirely via the central SharedWorker background thread.
         </p>
 
         <div class="iframes-flex">
           <div class="iframe-wrapper">
-            <iframe src="iframe.html?id=iframe-a&name=Iframe%20A"></iframe>
+            <iframe src="iframe.html?id=iframe-a&name=Iframe%20A&v=2"></iframe>
           </div>
           <div class="iframe-wrapper">
-            <iframe src="iframe.html?id=iframe-b&name=Iframe%20B"></iframe>
+            <iframe src="iframe.html?id=iframe-b&name=Iframe%20B&v=2"></iframe>
           </div>
         </div>
       </div>
@@ -206,17 +205,17 @@
 
     <!-- BOTTOM SECTION: CROSS-TAB TESTING -->
     <div class="glass-panel tab-test-card">
-      <div class="panel-section-title" style="border: none; padding-bottom: 0; color: var(--accent-purple);">
-        <span>🚀 Multi-Tab & Cross-Window Playground</span>
+      <div class="panel-section-title" style="border: none; padding-bottom: 0; margin-bottom: 0; font-size: 1.4rem;">
+        <span>Multi-Tab & Cross-Window Playground</span>
       </div>
-      <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
-        SharedWorker doesn't just coordinate communication inside iframes! It coordinates communication across **any open browser tab or window** running on the exact same origin. 
-        Copy the server URL below, open it in another tab or side-by-side window, and watch the Node Topology map dynamically grow to show your new session.
+      <p style="font-size: 1rem; font-family: var(--font-serif); color: var(--text-charcoal); margin-top: 10px; line-height: 1.65;">
+        SharedWorker coordinates communication across **any open browser tab or window** running on the exact same origin. 
+        Copy the server URL below, open it in another tab or side-by-side window, and watch the system topology map dynamically grow to show your new session in real-time.
       </p>
       
       <div class="copy-section">
         <input type="text" id="share-url" readonly>
-        <button id="copy-btn" class="secondary" style="white-space: nowrap;">Copy Playground URL</button>
+        <button id="copy-btn" class="primary" style="white-space: nowrap;">Copy Playground URL</button>
       </div>
     </div>
 
@@ -237,11 +236,9 @@
       document.execCommand('copy');
       
       const originalText = copyBtn.textContent;
-      copyBtn.textContent = 'Copied! ✅';
-      copyBtn.className = 'primary';
+      copyBtn.textContent = 'Playground URL Copied! ✅';
       setTimeout(() => {
         copyBtn.textContent = originalText;
-        copyBtn.className = 'secondary';
       }, 2000);
     });
 
@@ -262,7 +259,6 @@
       const tagSpan = document.createElement('span');
       tagSpan.className = 'sys-tag';
       tagSpan.textContent = `[${action}]`;
-      tagSpan.style.color = '#a855f7';
 
       const textSpan = document.createElement('span');
       textSpan.className = 'msg-text';
@@ -314,7 +310,7 @@
       }
 
       try {
-        parentWorker = new SharedWorker('worker.js');
+        parentWorker = new SharedWorker('worker.js?v=2');
         parentPort = parentWorker.port;
 
         parentPort.onmessage = function(event) {

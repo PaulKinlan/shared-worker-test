@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌌 SharedWorker Multiplex Test Suite</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    @media (min-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 450px 1fr;
+      }
+    }
+
+    /* Side Panels */
+    .dashboard-panel {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .panel-section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      color: var(--accent-cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Iframes container styling */
+    .sandbox-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .iframes-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .iframes-flex {
+        flex-direction: row;
+      }
+    }
+
+    .iframe-wrapper {
+      flex: 1;
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(10, 12, 22, 0.4);
+      height: 480px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transition: var(--transition-smooth);
+    }
+
+    .iframe-wrapper:hover {
+      border-color: var(--border-focus);
+    }
+
+    .iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Diagnostics Log */
+    .diagnostics-log {
+      height: 160px;
+      color: #93c5fd;
+    }
+
+    /* Multi-Tab visual helper */
+    .tab-test-card {
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .copy-section {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1 class="title-gradient">🌌 SharedWorker Multiplex</h1>
+      <p>A high-fidelity cross-context and cross-tab real-time communication platform</p>
+    </header>
+
+    <div class="main-grid">
+      
+      <!-- LEFT SIDEBAR: DIAGNOSTICS & CONTROL -->
+      <div class="glass-panel dashboard-panel">
+        
+        <!-- Parent Client Control -->
+        <div>
+          <div class="panel-section-title">
+            <span>Parent Main Client</span>
+            <span id="main-status-badge" class="badge badge-success">Connected</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0 12px 0;">
+            The parent window is registered in the worker as a standard peer node.
+          </p>
+          <form id="parent-message-form" class="flex-row">
+            <input type="text" id="parent-message-input" placeholder="Broadcasting from parent..." required autocomplete="off">
+            <button type="submit" class="primary">Broadcast</button>
+          </form>
+        </div>
+
+        <!-- Topology Map -->
+        <div>
+          <div class="panel-section-title">
+            <span>Worker Topology Map</span>
+          </div>
+          <div class="topology-container">
+            <div class="topology-grid" id="topology-grid">
+              <!-- Dynamically rendered -->
+              <div class="node worker-hub">
+                Hub
+                <span>SharedWorker</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wire Trace Log -->
+        <div>
+          <div class="panel-section-title">
+            <span>SharedWorker Trace Log</span>
+          </div>
+          <div id="diagnostics" class="terminal-window diagnostics-log">
+            <div class="terminal-line">
+              <span class="time">[--:--:--]</span>
+              <span class="sys-tag">[Trace]</span>
+              <span class="msg-text">Listening for SharedWorker payload broadcasts...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT SIDEBAR: EMBEDDED IFRAME SANDBOX -->
+      <div class="glass-panel sandbox-container">
+        <div class="panel-section-title">
+          <span>Embedded Client Sandboxes (Iframes)</span>
+          <span class="badge badge-success" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.3);">Iframe Sandbox Mode</span>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          These two iframes share the same window context and communicate entirely via the central SharedWorker background thread.
+        </p>
+
+        <div class="iframes-flex">
+          <div class="iframe-wrapper">
+            <iframe src="iframe.html?id=iframe-a&name=Iframe%20A"></iframe>
+          </div>
+          <div class="iframe-wrapper">
+            <iframe src="iframe.html?id=iframe-b&name=Iframe%20B"></iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM SECTION: CROSS-TAB TESTING -->
+    <div class="glass-panel tab-test-card">
+      <div class="panel-section-title" style="border: none; padding-bottom: 0; color: var(--accent-purple);">
+        <span>🚀 Multi-Tab & Cross-Window Playground</span>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+        SharedWorker doesn't just coordinate communication inside iframes! It coordinates communication across **any open browser tab or window** running on the exact same origin. 
+        Copy the server URL below, open it in another tab or side-by-side window, and watch the Node Topology map dynamically grow to show your new session.
+      </p>
+      
+      <div class="copy-section">
+        <input type="text" id="share-url" readonly>
+        <button id="copy-btn" class="secondary" style="white-space: nowrap;">Copy Playground URL</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Create random Tab ID
+    const tabId = `tab-${Math.random().toString(36).substring(2, 7)}`;
+    const tabName = `Dashboard Tab (${tabId.toUpperCase()})`;
+
+    // Fill URL value
+    const shareUrlInput = document.getElementById('share-url');
+    shareUrlInput.value = window.location.href;
+
+    const copyBtn = document.getElementById('copy-btn');
+    copyBtn.addEventListener('click', () => {
+      shareUrlInput.select();
+      document.execCommand('copy');
+      
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'Copied! ✅';
+      copyBtn.className = 'primary';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+        copyBtn.className = 'secondary';
+      }, 2000);
+    });
+
+    let parentWorker = null;
+    let parentPort = null;
+    const diagLog = document.getElementById('diagnostics');
+    const topologyGrid = document.getElementById('topology-grid');
+
+    function logTrace(action, details) {
+      const line = document.createElement('div');
+      line.className = 'terminal-line';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'time';
+      const now = new Date();
+      timeSpan.textContent = `[${now.toTimeString().split(' ')[0]}]`;
+
+      const tagSpan = document.createElement('span');
+      tagSpan.className = 'sys-tag';
+      tagSpan.textContent = `[${action}]`;
+      tagSpan.style.color = '#a855f7';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'msg-text';
+      textSpan.textContent = details;
+
+      line.appendChild(timeSpan);
+      line.appendChild(tagSpan);
+      line.appendChild(textSpan);
+      diagLog.appendChild(line);
+      diagLog.scrollTop = diagLog.scrollHeight;
+    }
+
+    function renderTopology(clients) {
+      // Clear topology but preserve worker hub
+      topologyGrid.innerHTML = '';
+
+      // Always render Central SharedWorker hub
+      const hubNode = document.createElement('div');
+      hubNode.className = 'node worker-hub';
+      hubNode.innerHTML = `Hub <span>SharedWorker</span>`;
+      topologyGrid.appendChild(hubNode);
+
+      // Render clients
+      clients.forEach(client => {
+        const node = document.createElement('div');
+        node.className = 'node';
+        
+        let clientLabel = client.name;
+        if (client.id === tabId) {
+          node.classList.add('active-tab');
+          clientLabel += ' (You)';
+        } else if (client.id.startsWith('iframe-')) {
+          node.classList.add('active-iframe');
+        } else {
+          node.classList.add('active-tab');
+        }
+
+        node.innerHTML = `${client.name.substring(0, 10)}${client.name.length > 10 ? '..' : ''} <span>${client.id}</span>`;
+        topologyGrid.appendChild(node);
+      });
+    }
+
+    function initParentWorker() {
+      if (typeof SharedWorker === 'undefined') {
+        logTrace('ERROR', 'SharedWorker not supported in this browser environment.');
+        document.getElementById('main-status-badge').className = 'badge badge-danger';
+        document.getElementById('main-status-badge').textContent = 'Unsupported';
+        return;
+      }
+
+      try {
+        parentWorker = new SharedWorker('worker.js');
+        parentPort = parentWorker.port;
+
+        parentPort.onmessage = function(event) {
+          const data = event.data;
+          
+          if (!data) return;
+
+          // Trace wire protocol events
+          logTrace(
+            data.type.toUpperCase(), 
+            data.type === 'system' 
+              ? `${data.name} -> ${data.action.toUpperCase()}` 
+              : `Broadcast from ${data.senderName}: "${data.text}"`
+          );
+
+          if (data.type === 'system') {
+            // Update active topology map
+            renderTopology(data.activeClients);
+          }
+        };
+
+        parentPort.start();
+
+        parentPort.postMessage({
+          type: 'register',
+          id: tabId,
+          name: 'Main Page'
+        });
+
+        logTrace('SYSTEM', 'Parent Main Client connected and listening.');
+      } catch (err) {
+        logTrace('ERROR', `Failed to init: ${err.message}`);
+      }
+    }
+
+    // Message submit from main dashboard
+    const parentForm = document.getElementById('parent-message-form');
+    const parentInput = document.getElementById('parent-message-input');
+
+    parentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = parentInput.value.trim();
+      if (!text || !parentPort) return;
+
+      parentPort.postMessage({
+        type: 'message',
+        text: text
+      });
+
+      parentInput.value = '';
+      parentInput.focus();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (parentPort) {
+        parentPort.postMessage({ type: 'disconnect' });
+      }
+    });
+
+    // Run initialization
+    initParentWorker();
+  </script>
+</body>
+</html>

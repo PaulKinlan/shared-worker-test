@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SharedWorker Client Iframe</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: transparent !important;
+      padding: 10px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .iframe-card {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 20px);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+    .terminal-window {
+      flex: 1;
+      margin-bottom: 12px;
+      min-height: 120px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glass-panel iframe-card">
+    <div class="header">
+      <h2 id="client-title">Iframe Client</h2>
+      <span id="status-badge" class="badge badge-success">Connected</span>
+    </div>
+
+    <div id="terminal" class="terminal-window">
+      <div class="terminal-line">
+        <span class="time">[--:--:--]</span>
+        <span class="sys-tag">[System]</span>
+        <span class="msg-text">Initializing SharedWorker interface...</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <form id="message-form" class="flex-row">
+        <input type="text" id="message-input" placeholder="Type a message to broadcast..." required autocomplete="off">
+        <button type="submit" class="primary">Send</button>
+      </form>
+      
+      <div class="flex-row">
+        <button id="toggle-conn-btn" class="secondary flex-grow" type="button">Disconnect Node</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Extract Client Metadata from URL query parameters
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get('id') || `iframe-${Math.random().toString(36).substring(2, 9)}`;
+    const clientName = params.get('name') || 'Iframe Node';
+
+    document.getElementById('client-title').textContent = clientName;
+
+    let myWorker = null;
+    let workerPort = null;
+    let isConnected = false;
+
+    const terminalEl = document.getElementById('terminal');
+    const messageInput = document.getElementById('message-input');
+    const messageForm = document.getElementById('message-form');
+    const toggleConnBtn = document.getElementById('toggle-conn-btn');
+    const statusBadge = document.getElementById('status-badge');
+
+    function logToTerminal(sender, text, isSystem = false) {
+      const line = document.createElement('div');
+      line.className = 'terminal-line';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'time';
+      const now = new Date();
+      timeSpan.textContent = `[${now.toTimeString().split(' ')[0]}]`;
+
+      const tagSpan = document.createElement('span');
+      if (isSystem) {
+        tagSpan.className = 'sys-tag';
+        tagSpan.textContent = '[System]';
+      } else {
+        tagSpan.className = 'user-tag';
+        tagSpan.textContent = `[${sender}]`;
+      }
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'msg-text';
+      textSpan.textContent = text;
+
+      line.appendChild(timeSpan);
+      line.appendChild(tagSpan);
+      line.appendChild(textSpan);
+      terminalEl.appendChild(line);
+
+      // Keep scrolled to bottom
+      terminalEl.scrollTop = terminalEl.scrollHeight;
+    }
+
+    function initSharedWorker() {
+      if (typeof SharedWorker === 'undefined') {
+        logToTerminal('System', 'Error: SharedWorker is not supported in this browser.', true);
+        statusBadge.className = 'badge badge-danger';
+        statusBadge.textContent = 'Unsupported';
+        toggleConnBtn.disabled = true;
+        return;
+      }
+
+      try {
+        // Instantiate SharedWorker
+        myWorker = new SharedWorker('worker.js');
+        workerPort = myWorker.port;
+
+        // Register the message listener
+        workerPort.onmessage = function(event) {
+          const data = event.data;
+          
+          if (data.type === 'system') {
+            if (data.id === clientId) return; // Ignore self-notifications
+            
+            if (data.action === 'connected') {
+              logToTerminal('System', `${data.name} has joined the worker node grid.`, true);
+            } else if (data.action === 'disconnected') {
+              logToTerminal('System', `${data.name} has left the worker node grid.`, true);
+            }
+          } 
+          else if (data.type === 'message') {
+            logToTerminal(data.senderName, data.text);
+          }
+        };
+
+        // Explicitly start the connection
+        workerPort.start();
+
+        // Register with details
+        workerPort.postMessage({
+          type: 'register',
+          id: clientId,
+          name: clientName
+        });
+
+        isConnected = true;
+        statusBadge.className = 'badge badge-success';
+        statusBadge.textContent = 'Connected';
+        toggleConnBtn.textContent = 'Disconnect Node';
+        toggleConnBtn.className = 'danger flex-grow';
+        
+        logToTerminal('System', 'Connected successfully to SharedWorker.', true);
+      } catch (err) {
+        logToTerminal('System', `Connection failed: ${err.message}`, true);
+        console.error(err);
+      }
+    }
+
+    function disconnectFromWorker() {
+      if (workerPort) {
+        // Gracefully notify worker of disconnect
+        workerPort.postMessage({ type: 'disconnect' });
+        workerPort.close();
+      }
+      
+      isConnected = false;
+      statusBadge.className = 'badge badge-danger';
+      statusBadge.textContent = 'Offline';
+      toggleConnBtn.textContent = 'Reconnect Node';
+      toggleConnBtn.className = 'primary flex-grow';
+      
+      logToTerminal('System', 'Disconnected from SharedWorker manually.', true);
+    }
+
+    // Connect / Disconnect Action
+    toggleConnBtn.addEventListener('click', () => {
+      if (isConnected) {
+        disconnectFromWorker();
+      } else {
+        initSharedWorker();
+      }
+    });
+
+    // Form submission
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      
+      if (!text) return;
+      
+      if (!isConnected) {
+        logToTerminal('System', 'Cannot send message: Node is offline. Please reconnect first.', true);
+        return;
+      }
+
+      // Send message through worker port
+      workerPort.postMessage({
+        type: 'message',
+        text: text
+      });
+
+      messageInput.value = '';
+      messageInput.focus();
+    });
+
+    // Graceful disconnect on unload
+    window.addEventListener('beforeunload', () => {
+      if (workerPort && isConnected) {
+        workerPort.postMessage({ type: 'disconnect' });
+      }
+    });
+
+    // Run initialization
+    initSharedWorker();
+  </script>
+</body>
+</html>
